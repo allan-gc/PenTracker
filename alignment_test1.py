@@ -81,6 +81,7 @@ try:
         depth_image = np.asanyarray(aligned_depth_frame.get_data())
         color_image = np.asanyarray(color_frame.get_data())
 
+
         # Remove background - Set pixels further than clipping_distance to grey
         grey_color = 255
         depth_image_3d = np.dstack((depth_image,depth_image,depth_image)) #depth image is 1 channel, color is 3 channels
@@ -88,13 +89,21 @@ try:
 
         hsv = cv2.cvtColor(bg_removed, cv2.COLOR_BGR2HSV)
 
-        lower_purp=np.array([265,64,99])
-        higher_purp=np.array([270,66,60])
+        lower_purp = np.array([115,50,50])
+        upper_purp = np.array([130,250,250])
+       
+        #lower_purp = np.array([50,50,255])
+        #upper_purp = np.array([50,50,255])
+        mask = cv2.inRange(hsv, lower_purp, upper_purp)
+        res = cv2.bitwise_and(hsv,hsv, mask= mask)
 
-        mask = cv2.inRange(hsv, lower_purp, higher_purp)
+        contours, hierarchy = cv2.findContours(mask, 1,2)
+        #cnt=contours[0]
+        #M=cv.moments(cnt)
+        #cnt = contours[4]
+        cv2.drawContours(bg_removed, contours, -1, (0,255,0), 3)
 
-        res = cv2.bitwise_and(bg_removed,bg_removed, mask= mask)
-
+        
 
         # Render images:
         #   depth align to color on left
@@ -104,6 +113,9 @@ try:
 
         cv2.namedWindow('Align Example', cv2.WINDOW_NORMAL)
         cv2.imshow('Align Example', images)
+        cv2.imshow('Align Example', bg_removed)
+        #cv2.imshow('Align Example', mask)
+
         key = cv2.waitKey(1)
         # Press esc or 'q' to close the image window
         if key & 0xFF == ord('q') or key == 27:

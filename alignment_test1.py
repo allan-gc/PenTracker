@@ -12,6 +12,9 @@ import numpy as np
 # Import OpenCV for easy image rendering
 import cv2
 
+
+
+
 # Create a pipeline
 pipeline = rs.pipeline()
 
@@ -97,37 +100,39 @@ try:
         res = cv2.bitwise_and(hsv,hsv, mask= mask)
 
         contours, hierarchy = cv2.findContours(mask, 1,2)
-        moment_list=[]
+        #moment_list=[]
+        cx=0
+        cy=0
         if len(contours)!=0:
+            moment_list=[]
             print(f"first contour: {len(contours)}")
             for cnt in contours:
                 M=cv2.moments(cnt)
                 print(f"area = {M['m00']}")
                 moment_list.append(M['m00'])
                 #if M['m00'] !=0:
-                 #   moment_list.append('m00')
+                   #moment_list.append(M['m00'])
 
-            #print(f"num moments: {len(moment_list)}")
-            #print(f"moments: {(moment_list)}")
+            print(f"num moments: {len(moment_list)}")
+            print(f"moments: {(moment_list)}")
             max_area_index=moment_list.index(max(moment_list))
-            #print(f"max area = {max(moment_list)}")
-            #print(f"max area index = {max_area_index}")
+            print(f"max area = {max(moment_list)}")
+            print(f"max area index = {max_area_index}")
             finalcnt=contours[max_area_index]
-            #print(f"max area = {finalcnt}")
+            print(f"max area contour = {finalcnt}")
             finalmoment=cv2.moments(finalcnt)
-            #print(f"area = {M['m00']}")
-            #print(f"area = {M['m00']}")
-        
+            print(f"area = {finalmoment['m00']}")
+            if finalmoment['m00']!=0:
+                 cx = int(finalmoment['m10']/finalmoment['m00'])
+                 cy = int(finalmoment['m01']/finalmoment['m00'])
+                 print(f"centroid  = {cx,cy}")
 
+     
 
-
-
-        #cx = int(M['m10']/M['m00'])
-        #cy = int(M['m01']/M['m00'])
-
-        
+        #centroid = cv2.circle(bg_removed, (cx,cy), radius=0, color=(0, 0, 255), thickness=-1)    
     
         cv2.drawContours(bg_removed, contours, -1, (0,255,0), 3)
+        cv2.circle(bg_removed, (cx,cy), radius=5, color=(0, 0, 255), thickness=-1)    
 
         
         # Render images:
@@ -137,7 +142,8 @@ try:
         images = np.hstack((bg_removed, depth_colormap))
 
         cv2.namedWindow('Align Example', cv2.WINDOW_NORMAL)
-        cv2.imshow('Align Example', mask)
+        cv2.imshow('Align Example', bg_removed)
+        #cv2.imshow( 'bg_removed', centroid)
         #cv2.imshow('Align Example', bg_removed)
         #cv2.imshow('Align Example', mask)
 
@@ -148,3 +154,6 @@ try:
             break
 finally:
     pipeline.stop()
+
+
+

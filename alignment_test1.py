@@ -88,9 +88,8 @@ try:
         bg_removed = np.where((depth_image_3d > clipping_distance) | (depth_image_3d <= 0), grey_color, color_image)
 
         hsv = cv2.cvtColor(bg_removed, cv2.COLOR_BGR2HSV)
-
-        lower_purp = np.array([115,50,50])
-        upper_purp = np.array([130,250,250])
+        lower_purp = np.array([91,132,99])
+        upper_purp = np.array([134,255,255])
        
         #lower_purp = np.array([50,50,255])
         #upper_purp = np.array([50,50,255])
@@ -98,22 +97,48 @@ try:
         res = cv2.bitwise_and(hsv,hsv, mask= mask)
 
         contours, hierarchy = cv2.findContours(mask, 1,2)
-        #cnt=contours[0]
-        #M=cv.moments(cnt)
-        #cnt = contours[4]
+        moment_list=[]
+        if len(contours)!=0:
+            print(f"first contour: {len(contours)}")
+            for cnt in contours:
+                M=cv2.moments(cnt)
+                print(f"area = {M['m00']}")
+                moment_list.append(M['m00'])
+                #if M['m00'] !=0:
+                 #   moment_list.append('m00')
+
+            #print(f"num moments: {len(moment_list)}")
+            #print(f"moments: {(moment_list)}")
+            max_area_index=moment_list.index(max(moment_list))
+            #print(f"max area = {max(moment_list)}")
+            #print(f"max area index = {max_area_index}")
+            finalcnt=contours[max_area_index]
+            #print(f"max area = {finalcnt}")
+            finalmoment=cv2.moments(finalcnt)
+            #print(f"area = {M['m00']}")
+            #print(f"area = {M['m00']}")
+        
+
+
+
+
+        #cx = int(M['m10']/M['m00'])
+        #cy = int(M['m01']/M['m00'])
+
+        
+    
         cv2.drawContours(bg_removed, contours, -1, (0,255,0), 3)
 
         
-
         # Render images:
         #   depth align to color on left
         #   depth on right
         depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.03), cv2.COLORMAP_JET)
-        images = np.hstack((res, depth_colormap))
+        images = np.hstack((bg_removed, depth_colormap))
 
         cv2.namedWindow('Align Example', cv2.WINDOW_NORMAL)
-        cv2.imshow('Align Example', images)
-        cv2.imshow('Align Example', bg_removed)
+        cv2.imshow('Align Example', mask)
+        #cv2.imshow('Align Example', bg_removed)
         #cv2.imshow('Align Example', mask)
 
         key = cv2.waitKey(1)

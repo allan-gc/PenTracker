@@ -21,11 +21,11 @@ robot.gripper.set_pressure(1.0)
 
 
 #calibration of Prx,Pry,Prz (pen wrt robot)
-prx,pry,prz=[0.248575, 0.0, 0.1931]
+prx,pry,prz=[0.09066241, 0.0,  0.0867908 ]
 
 #cali of Pcx, Pcy, and Pcd (pen wrt camera)
 
-pcx,pcy,pcd=[0.039599787443876266, -0.11097724735736847, 0.33800002932548523]
+pcx,pcy,pcd=[0.10973692685365677, -0.03276263177394867, 0.2800000011920929]
 
 
 Ocy=pry+pcd
@@ -205,10 +205,12 @@ try:
             robot.arm.set_ee_cartesian_trajectory(x=error_ee_pen_x,y=0, z=error_ee_pen_z)
 
             print(f"x error = {[error_ee_pen_x]}")
-            if error_ee_pen_x <abs(0.01) and error_ee_pen_x!=0:
+        
+            if error_ee_pen_x <abs(0.015) and error_ee_pen_z < abs(0.015):
                 robot.gripper.grasp()
                 cv2.destroyAllWindows()
                 break
+                
                 
             
          
@@ -233,7 +235,7 @@ try:
             break
 finally:
     pipeline.stop()
-    robot.arm.go_to_home_pose()
+    robot.arm.go_to_sleep_pose()
     robot.gripper.release()
 
 

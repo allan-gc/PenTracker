@@ -5,14 +5,11 @@
 ##              Align Depth to Color               ##
 #####################################################
 
-# First import the library
+
 import pyrealsense2 as rs
-# Import Numpy for easy array manipulation
 import numpy as np
-# Import OpenCV for easy image rendering
 import cv2
 from interbotix_xs_modules.xs_robot.arm import InterbotixManipulatorXS
-import math
 import modern_robotics as mr
 # The robot object is what you use to control the robot
 robot = InterbotixManipulatorXS("px100", "arm", "gripper")
@@ -21,12 +18,10 @@ robot.gripper.set_pressure(1.0)
 
 
 #calibration of Prx,Pry,Prz (pen wrt robot)
-# prx,pry,prz=[0.09066241, 0.0,  0.0867908 ]
 prx,pry,prz= [0.11164939, -0.01272855 , 0.10591128]
 
 #cali of Pcx, Pcy, and Pcd (pen wrt camera)
 
-# pcx,pcy,pcd=[0.10973692685365677, -0.03276263177394867, 0.2800000011920929]
 pcx,pcy,pcd=[0.13236582279205322, -0.04041934758424759, 0.3230000138282776]
 
 

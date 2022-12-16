@@ -1,5 +1,8 @@
 # Pincherx100 Robotic Arm Pen Tracker 
 
+The location of pen is tracked using an Intel RealSense camera, and the px100 robotic arm is able to
+grab the pen using that information. 
+
 Demo Video:
 
 

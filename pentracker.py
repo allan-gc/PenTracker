@@ -21,11 +21,13 @@ robot.gripper.set_pressure(1.0)
 
 
 #calibration of Prx,Pry,Prz (pen wrt robot)
-prx,pry,prz=[0.09066241, 0.0,  0.0867908 ]
+# prx,pry,prz=[0.09066241, 0.0,  0.0867908 ]
+prx,pry,prz= [0.11164939, -0.01272855 , 0.10591128]
 
 #cali of Pcx, Pcy, and Pcd (pen wrt camera)
 
-pcx,pcy,pcd=[0.10973692685365677, -0.03276263177394867, 0.2800000011920929]
+# pcx,pcy,pcd=[0.10973692685365677, -0.03276263177394867, 0.2800000011920929]
+pcx,pcy,pcd=[0.13236582279205322, -0.04041934758424759, 0.3230000138282776]
 
 
 Ocy=pry+pcd
@@ -112,10 +114,6 @@ try:
         color_image = np.asanyarray(color_frame.get_data())
 
         hsv = cv2.cvtColor(color_image, cv2.COLOR_BGR2HSV)
-        #lower_purp = np.array([57,144,90])
-        #upper_purp = np.array([150,255,255])
-        #lower_purp = np.array([91,132,99])
-        #upper_purp = np.array([134,255,255])
         lower_purp = np.array([115,100,30])
         upper_purp = np.array([150,255,255])
        
@@ -125,60 +123,37 @@ try:
 
 
         # Remove background - Set pixels further than clipping_distance to grey
-        #grey_color = 255
-        #depth_image_3d = np.dstack((depth_image,depth_image,depth_image)) #depth image is 1 channel, color is 3 channels
-        #bg_removed = np.where((depth_image_3d > clipping_distance) | (depth_image_3d <= 0), grey_color, color_image)
+        grey_color = 255
+        depth_image_3d = np.dstack((depth_image,depth_image,depth_image)) #depth image is 1 channel, color is 3 channels
+        bg_removed = np.where((depth_image_3d > clipping_distance) | (depth_image_3d <= 0), grey_color, color_image)
 
-        #hsv = cv2.cvtColor(bg_removed, cv2.COLOR_BGR2HSV)
-        #lower_purp = np.array([107,114,107])
-        #upper_purp = np.array([147,255,255])
-        #lower_purp = np.array([91,132,99])
-        #upper_purp = np.array([134,255,255])
-       
-  
-        #mask = cv2.inRange(hsv, lower_purp, upper_purp)
-        #res = cv2.bitwise_and(hsv,hsv, mask= mask)
 
         contours, hierarchy = cv2.findContours(mask, 1,2)
         cx=0
         cy=0
         if len(contours)!=0:
             moment_list=[]
-            #print(f"first contour: {len(contours)}")
             for cnt in contours:
                 M=cv2.moments(cnt)
-                #print(f"area = {M['m00']}")
                 moment_list.append(M['m00'])
-                #if M['m00'] !=0:
-                   #moment_list.append(M['m00'])
 
-            #print(f"num moments: {len(moment_list)}")
-            #print(f"moments: {(moment_list)}")
             max_area_index=moment_list.index(max(moment_list))
-            #print(f"max area = {max(moment_list)}")
-            #print(f"max area index = {max_area_index}")
             finalcnt=contours[max_area_index]
-            #print(f"max area contour = {finalcnt}")
             finalmoment=cv2.moments(finalcnt)
-            #print(f"area = {finalmoment['m00']}")
             if finalmoment['m00']!=0:
                  cx = int(finalmoment['m10']/finalmoment['m00'])
                  cy = int(finalmoment['m01']/finalmoment['m00'])
-                 #print(f"centroid  = {cx,cy}")
 
      
     
         cv2.drawContours(color_image, contours, -1, (0,255,0), 3)
         cv2.circle(color_image, (cx,cy), radius=5, color=(0, 0, 255), thickness=-1)    
         pixel_distance_in_meters = dpt.get_distance(cx,cy)
-        #print(f"depth(m) of centroid  = {pixel_distance_in_meters}")
         [x,y,z]=rs.rs2_deproject_pixel_to_point(intr, [cx, cy], (pixel_distance_in_meters))
-        #[x,y,z]=[x*depth_scale,y*depth_scale,z]
         print(f"x,y,z of pen in m  = {[x,y,z]}")
+        
 
         #Calculate rotation angle given pen's location
-        
-        
         rob_curr_angle=0
         if z<0.5 and z!=0:
             p2rx=Ocx-x
@@ -188,7 +163,7 @@ try:
             phi = np.arctan2(p2ry, p2rx)
             error=phi-rob_curr_angle
             rob_curr_angle=phi
-            robot.arm.set_single_joint_position(joint_name='waist',position=error,moving_time=2.0)
+            robot.arm.set_single_joint_position(joint_name='waist',position=rob_curr_angle,moving_time=2.0)
 
 
             joints = robot.arm.get_joint_commands()
@@ -197,11 +172,11 @@ try:
 
 
             error_ee_pen_x,error_ee_pen_y, error_ee_pen_z=p2rx-p[0], p2ry-p[1], p2rz-p[2]
-            #robot.arm.set_single_joint_position(joint_name='wrist_angle',position=(-p2rz),moving_time=2.0)
-            #robot.arm.set_single_joint_position(joint_name='shoulder',position=error_ee_pen_x,moving_time=2.0)
-            #if error_ee_pen_x and error_ee_pen_z ==0:
-                #robot.gripper.grasp()
-            #robot.arm.set_single_joint_position(joint_name='elbow',position=error_ee_pen_z,moving_time=2.0)
+            robot.arm.set_single_joint_position(joint_name='wrist_angle',position=(-p2rz),moving_time=2.0)
+            robot.arm.set_single_joint_position(joint_name='shoulder',position=error_ee_pen_x,moving_time=2.0)
+            if error_ee_pen_x and error_ee_pen_z ==0:
+                robot.gripper.grasp()
+            robot.arm.set_single_joint_position(joint_name='elbow',position=error_ee_pen_z,moving_time=2.0)
             robot.arm.set_ee_cartesian_trajectory(x=error_ee_pen_x,y=0, z=error_ee_pen_z)
 
             print(f"x error = {[error_ee_pen_x]}")
@@ -220,13 +195,9 @@ try:
         #   depth align to color on left
         #   depth on right
         depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.03), cv2.COLORMAP_JET)
-        #images = np.hstack((bg_removed, depth_colormap))
+        images = np.hstack((bg_removed, depth_colormap))
 
-        cv2.namedWindow('Align Example', cv2.WINDOW_NORMAL)
-        #cv2.imshow('Align Example', color_image)
-        #cv2.imshow( 'bg_removed', centroid)
-        #cv2.imshow('Align Example', bg_removed)
-        cv2.imshow('Align Example', color_image)
+        cv2.imshow('Pen Detection', color_image)
 
         key = cv2.waitKey(1)
         # Press esc or 'q' to close the image window
